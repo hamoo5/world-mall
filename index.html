@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -115,6 +114,7 @@ function route(){
   scrollTo(0,0);
   if (h[0]==="store" && h[1]) return storePage(decodeURIComponent(h[1]));
   if (h[0]==="login") return loginPage();
+  if (h[0]==="reset") return resetPage();
   if (h[0]==="search") return searchPage(h[1]||"");
   if (h[0]==="offers") return offersPage();
   if (h[0]==="requests") return requestsPage();
@@ -123,6 +123,19 @@ function route(){
 }
 
 /* ---- أدوات مشتركة ---- */
+function normPhone(v){let d=String(v).replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);if(d.startsWith("0"))d="20"+d.slice(1);return d}
+const myPhone=()=>user?user.email.split("@")[0]:"";
+async function uploadImg(file){
+  if(!file)return null;
+  const bmp=await createImageBitmap(file),sc=Math.min(1,800/Math.max(bmp.width,bmp.height));
+  const c=document.createElement("canvas");c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
+  c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.8));
+  const path=user.id+"/"+Date.now()+".jpg";
+  const {error}=await db.storage.from("images").upload(path,blob,{contentType:"image/jpeg"});
+  if(error)throw error;
+  return db.storage.from("images").getPublicUrl(path).data.publicUrl;
+}
 const favs=()=>{try{return JSON.parse(localStorage.getItem("fav")||"[]")}catch{return[]}};
 const logoHtml=s=>`<div class="logo">${s.logo_url?`<img src="${esc(s.logo_url)}" alt="">`:esc(s.name[0])}</div>`;
 const isNew=s=>s.created_at&&Date.now()-new Date(s.created_at)<7*864e5;
@@ -140,12 +153,12 @@ const prodCard=(p,extra="")=>`<div class="prod"><div class="im">${p.image_url?`<
 /* ---- المدخل ---- */
 async function homePage(){
   $("#app").innerHTML=`<div id="season"></div>
-  <form id="sf" class="srch"><input id="q" placeholder="دوّر على منتج في كل المحلات" required><button>بحث</button></form>
+  <form id="sf" class="srch"><input id="q" placeholder="دوّر على منتج، أو اكتب رقم واتساب محل" required><button>بحث</button></form>
   <div class="row"><a class="btn" href="#/offers">عروض المول</a><a class="btn" href="#/requests">سبورة الطلبات</a><button class="alt" id="rnd">دوّرني في المول</button></div>
   <div id="sod"></div><div id="trend"></div><h2>أدوار المول</h2><div class="chips" id="chips"></div>
   <select id="gov" class="gov"><option value="">كل المحافظات</option></select>
   <div class="grid" id="shops"><p class="muted">جاري التحميل…</p></div>`;
-  $("#sf").onsubmit=e=>{e.preventDefault();location.hash="#/search/"+encodeURIComponent($("#q").value.trim())};
+  $("#sf").onsubmit=e=>{e.preventDefault();const v=$("#q").value.trim();location.hash=/^[\d\s+]{8,}$/.test(v)?"#/store/"+normPhone(v):"#/search/"+encodeURIComponent(v)};
   const [st,tr,sh]=await Promise.all([db.from("settings").select("*"),db.rpc("trending_stores"),
     db.from("stores").select("slug,name,logo_url,color,is_verified,governorate,created_at,category_id,categories(name)").order("created_at",{ascending:false}).limit(300)]);
   if(sh.error) return $("#shops").innerHTML=`<p class="err">تعذر تحميل المحلات: ${esc(sh.error.message)}</p>`;
@@ -267,22 +280,55 @@ function openCart(){
     Object.keys(c).length?openCart():($("#sheet").innerHTML="",drawCartBar())};
 }
 
-/* ---- دخول التاجر ---- */
+/* ---- دخول التاجر: برقم الواتساب فقط ---- */
 function loginPage(){
-  if (user) { location.hash="#/dashboard"; return; }
-  $("#app").innerHTML = `<h2>ادخل أو افتح حساب تاجر</h2>
-    <form id="f"><label>الإيميل<input type="email" id="em" required autocomplete="email"></label>
-    <label>كلمة المرور (6 أحرف على الأقل)<input type="password" id="pw" required minlength="6" autocomplete="current-password"></label>
-    <p class="err" id="er"></p>
-    <div class="row"><button type="submit">دخول</button><button type="button" class="alt" id="su">حساب جديد</button></div></form>`;
-  const go = async mode => {
-    const cred={email:$("#em").value.trim(),password:$("#pw").value};
-    const r = mode==="up" ? await db.auth.signUp(cred) : await db.auth.signInWithPassword(cred);
-    if (r.error) return $("#er").textContent = "تعذر الدخول: " + r.error.message;
-    if (mode==="up" && !r.data.session) return $("#er").textContent = "تم إنشاء الحساب. أكد الإيميل من الرسالة ثم ادخل.";
+  if(user){location.hash="#/dashboard";return}
+  $("#app").innerHTML=`<h2>دخول التاجر</h2><p class="muted">رقم واتساب محلك هو عنوانه في المول. مفيش إيميل ولا روابط.</p>
+  <form id="f"><label>رقم الواتساب<input id="ph" type="tel" inputmode="numeric" required placeholder="01012345678" autocomplete="username"></label>
+  <label>كلمة سر (6 أحرف أو أرقام على الأقل)<input id="pw" type="password" required minlength="6" autocomplete="current-password"></label>
+  <p class="err" id="er"></p><div class="row"><button type="submit">دخول</button><button type="button" class="alt" id="su">فتح حساب جديد</button></div></form>
+  <p><a href="#/reset">نسيت كلمة السر؟</a></p>`;
+  const go=async mode=>{
+    const ph=normPhone($("#ph").value);
+    if(ph.length<10||ph.length>15)return $("#er").textContent="اكتب رقم واتساب صحيح";
+    const cred={email:ph+"@worldmall.app",password:$("#pw").value};
+    if(cred.password.length<6)return $("#er").textContent="كلمة السر لازم 6 على الأقل";
+    const r=mode==="up"?await db.auth.signUp(cred):await db.auth.signInWithPassword(cred);
+    if(r.error){const m=r.error.message||"";
+      return $("#er").textContent=/already|registered/i.test(m)?"الرقم ده مسجل قبل كده، اضغط دخول":/invalid login/i.test(m)?"الرقم أو كلمة السر غلط":"تعذر الدخول: "+m}
+    if(mode==="up"&&!r.data.session)return $("#er").textContent="الحساب اتعمل بس لازم تقفل Confirm email من Supabase";
+    if(mode==="up")return showRecovery(true);
     location.hash="#/dashboard";
   };
-  $("#f").onsubmit=e=>{e.preventDefault();go("in")}; $("#su").onclick=()=>go("up");
+  $("#f").onsubmit=e=>{e.preventDefault();go("in")};$("#su").onclick=()=>go("up");
+}
+
+/* ---- كود الاسترجاع ---- */
+function genCode(){const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789",b=crypto.getRandomValues(new Uint8Array(8)),c=[...b].map(x=>A[x%A.length]).join("");return c.slice(0,4)+"-"+c.slice(4)}
+async function showRecovery(){
+  const code=genCode(),r=await db.rpc("set_recovery_code",{code:code.replace("-","")});
+  if(r.error){toast("تعذر إنشاء كود الاسترجاع");return location.hash="#/dashboard"}
+  $("#app").innerHTML=`<h2>كود استرجاع حسابك</h2>
+    <div class="note"><b dir="ltr" style="font-size:30px;letter-spacing:3px;text-align:center">${code}</b>
+    <span>صوّر الشاشة أو اكتب الكود في مكان آمن. لو نسيت كلمة السر هتغيّرها بنفسك بالكود ده. بيظهر مرة واحدة بس.</span></div>
+    <div class="row"><button id="cpc">انسخ الكود</button><button class="alt" id="done">حفظته، كمّل</button></div>`;
+  $("#cpc").onclick=async()=>{try{await navigator.clipboard.writeText(code);toast("تم النسخ")}catch{toast("اكتبه يدوياً")}};
+  $("#done").onclick=()=>{location.hash="#/dashboard";route()};
+}
+function resetPage(){
+  $("#app").innerHTML=`<h2>نسيت كلمة السر</h2><p class="muted">اكتب رقمك وكود الاسترجاع اللي اتعرض عليك وقت التسجيل، وحط كلمة سر جديدة.</p>
+  <form id="f"><label>رقم الواتساب<input id="ph" type="tel" inputmode="numeric" required></label>
+  <label>كود الاسترجاع<input id="cd" required dir="ltr" placeholder="XXXX-XXXX" autocapitalize="characters"></label>
+  <label>كلمة السر الجديدة<input id="pw" type="password" required minlength="6" autocomplete="new-password"></label>
+  <p class="err" id="er"></p><button>غيّر كلمة السر</button></form>
+  <p class="muted">ضاع الكود؟ كلّم إدارة المول على واتساب.</p>`;
+  $("#f").onsubmit=async e=>{e.preventDefault();
+    const ph=normPhone($("#ph").value),pw=$("#pw").value;
+    const r=await db.rpc("reset_password",{p_phone:ph,p_code:$("#cd").value.toUpperCase().replace(/[^A-Z0-9]/g,""),p_new:pw});
+    if(r.error)return $("#er").textContent=r.error.message.includes("مقفول")?"محاولات كتير غلط، جرّب بعد 15 دقيقة":"تعذر التغيير: "+r.error.message;
+    if(r.data!==true)return $("#er").textContent="الرقم أو الكود غلط";
+    const l=await db.auth.signInWithPassword({email:ph+"@worldmall.app",password:pw});
+    toast("تم تغيير كلمة السر");location.hash=l.error?"#/login":"#/dashboard"};
 }
 
 /* ---- لوحة التاجر ---- */
@@ -308,33 +354,37 @@ async function dashPage(){
     <h2>أضف منتج</h2>${canAdd?"":`<p class="err">${active?"وصلت للحد الأقصى (3 منتجات) في التجربة المجانية. اشترك لإضافة المزيد.":"محلك متوقف. اشترك لإضافة منتجات."}</p>`}
     <form id="pf" ${canAdd?"":"hidden"}><label>اسم المنتج<input id="pn" required></label>
     <label>السعر (جنيه)<input id="pp" type="number" min="0" step="any" required inputmode="decimal"></label>
-    <label>رابط صورة المنتج (اختياري)<input id="pi" type="url" placeholder="https://"></label>
+    <label>صورة المنتج (اختياري)<input id="pi" type="file" accept="image/*"></label>
     <label>وصف قصير<input id="pd"></label><p class="err" id="er"></p><button>حفظ المنتج</button></form>
-    <h2>منتجاتك (${(ps||[]).length})</h2><div id="list"></div>`;
+    <h2>منتجاتك (${(ps||[]).length})</h2><div id="list"></div>
+    <div class="row" style="margin:24px 0 70px"><button class="alt" id="rcv">كود استرجاع جديد</button></div>`;
   $("#cp").onclick=async()=>{try{await navigator.clipboard.writeText(link);toast("تم نسخ الرابط")}catch{toast("انسخه يدوياً")}};
+  $("#rcv").onclick=()=>{if(confirm("الكود القديم هيتلغي. كمّل؟"))showRecovery()};
   const setIntent=async v=>{const r=await db.from("stores").update({renew_intent:v}).eq("id",s.id);if(r.error)return toast("تعذر الحفظ");dashPage()};
   if($("#subyes"))$("#subyes").onclick=()=>setIntent("yes"); if($("#subno"))$("#subno").onclick=()=>setIntent("no");
   $("#list").innerHTML = (ps||[]).map(p=>`<div class="item"><div><b>${esc(p.name)}</b><br><span class="price">${money(p.price)}</span>${p.available?"":' <small class="err">مخفي</small>'}</div>
     <button class="alt" data-t="${p.id}" data-a="${p.available}">${p.available?"إخفاء":"إظهار"}</button><button class="del" data-d="${p.id}">حذف</button></div>`).join("") || `<p class="muted">لم تضف منتجات بعد. ابدأ بالنموذج بالأعلى.</p>`;
   $("#pf").onsubmit=async e=>{e.preventDefault();
-    const r=await db.from("products").insert({store_id:s.id,name:$("#pn").value.trim(),price:+$("#pp").value,image_url:$("#pi").value.trim()||null,description:$("#pd").value.trim()||null});
+    let imgUrl=null;try{if($("#pi").files[0]){toast("جاري رفع الصورة…");imgUrl=await uploadImg($("#pi").files[0])}}catch{return $("#er").textContent="تعذر رفع الصورة، جرّب صورة تانية"}
+    const r=await db.from("products").insert({store_id:s.id,name:$("#pn").value.trim(),price:+$("#pp").value,image_url:imgUrl,description:$("#pd").value.trim()||null});
     if(r.error) return $("#er").textContent="تعذر الحفظ: "+r.error.message; toast("تم حفظ المنتج"); dashPage(); };
   $("#list").onclick=async e=>{ const t=e.target;
     if(t.dataset.d && confirm("حذف المنتج؟")){await db.from("products").delete().eq("id",t.dataset.d);dashPage()}
     if(t.dataset.t){await db.from("products").update({available:t.dataset.a!=="true"}).eq("id",t.dataset.t);dashPage()} };
 }
 function newStoreForm(){
-  $("#app").innerHTML = `<h2>استأجر محلك في المول</h2>
+  const ph=myPhone();
+  $("#app").innerHTML=`<h2>افتح محلك في المول</h2><p class="muted">رقم محلك (واتساب): <b>${esc(ph)}</b><br>أي زبون يكتب الرقم ده في خانة البحث يدخل محلك.</p>
     <form id="sf"><label>اسم المحل<input id="sn" required></label>
-    <label>رابط المحل (حروف إنجليزية وأرقام و - فقط)<input id="ss" required pattern="[a-z0-9\\-]+" placeholder="my-shop"></label>
     <label>القسم<select id="sc">${cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></label>
-    <label>رقم واتساب (بالكود الدولي، مثال 201012345678)<input id="sw" required inputmode="numeric"></label>
-    <label>رابط شعار المحل (اختياري)<input id="sl" type="url"></label>
-    <label>وصف قصير<input id="sd"></label><p class="err" id="er"></p><button>افتح المحل</button></form>`;
+    <label>وصف قصير (اختياري)<input id="sd"></label>
+    <label>صورة أو شعار المحل (اختياري)<input id="sl" type="file" accept="image/*"></label>
+    <p class="err" id="er"></p><button>افتح المحل</button></form>`;
   $("#sf").onsubmit=async e=>{e.preventDefault();
-    const r=await db.from("stores").insert({name:$("#sn").value.trim(),slug:$("#ss").value.trim(),category_id:+$("#sc").value,whatsapp:$("#sw").value.replace(/\D/g,""),logo_url:$("#sl").value.trim()||null,description:$("#sd").value.trim()||null});
-    if(r.error) return $("#er").textContent = r.error.code==="23505" ? "رابط المحل مستخدم، اختر غيره." : "تعذر الفتح: "+r.error.message;
-    toast("تم فتح محلك"); dashPage(); };
+    let logo=null;try{if($("#sl").files[0]){toast("جاري رفع الصورة…");logo=await uploadImg($("#sl").files[0])}}catch{return $("#er").textContent="تعذر رفع الصورة، جرّب صورة تانية"}
+    const r=await db.from("stores").insert({name:$("#sn").value.trim(),slug:ph,whatsapp:ph,category_id:+$("#sc").value,logo_url:logo,description:$("#sd").value.trim()||null});
+    if(r.error)return $("#er").textContent=r.error.code==="23505"?"الرقم ده عنده محل بالفعل.":"تعذر الفتح: "+r.error.message;
+    toast("تم فتح محلك");dashPage()};
 }
 init();
 </script>
