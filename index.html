@@ -1,1 +1,342 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مول العالم</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14284b">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f6;--card:#fff;--ink:#14284b;--mute:#5d6b85;--line:#d9dfeb;--brass:#d99a1e;--ok:#1f8a5b;--bad:#c0392b}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1a30;--card:#162540;--ink:#eef1f6;--mute:#9fb0cc;--line:#26385a}}
+*{box-sizing:border-box;margin:0}[hidden]{display:none!important}
+body{font-family:Tajawal,system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:env(safe-area-inset-bottom)}
+header{background:#14284b;color:#fff;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header a{color:#fff;text-decoration:none}
+.brand{font-weight:800;font-size:20px;letter-spacing:.5px}.brand b{color:var(--brass)}
+nav{display:flex;gap:8px}
+nav a{font-size:14px;padding:6px 12px;border:1px solid #ffffff44;border-radius:20px}
+main{max-width:760px;margin:0 auto;padding:14px}
+h2{font-size:20px;margin:14px 0 10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.chip{white-space:nowrap;padding:7px 14px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--ink);font:inherit;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.shop{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-top:5px solid var(--brass);border-radius:6px;padding:14px 10px;text-align:center}
+.logo{width:64px;height:64px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:26px;font-weight:800;margin:0 auto 8px;overflow:hidden}
+.logo img{width:100%;height:100%;object-fit:cover}
+.shop small,.muted{color:var(--mute);font-size:13px}
+.prod{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.prod .im{aspect-ratio:1;background:var(--line);display:grid;place-items:center;color:var(--mute)}
+.prod .im img{width:100%;height:100%;object-fit:cover}
+.prod .b{padding:8px;display:flex;flex-direction:column;gap:4px;flex:1}
+.price{font-weight:800;color:var(--ok)}
+button,.btn{font:inherit;cursor:pointer;border:0;border-radius:6px;padding:9px 14px;background:var(--ink);color:var(--bg);font-weight:700;text-decoration:none;display:inline-block;text-align:center}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.wa,.btn.wa{background:#1fa855;color:#fff}
+button.del{background:var(--bad);color:#fff;padding:5px 10px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.hero{background:#14284b;color:#fff;border-radius:6px;padding:18px;margin-bottom:12px;display:flex;gap:12px;align-items:center}
+.hero .logo{margin:0;flex:none;background:var(--brass);color:#14284b}
+.hero p{color:#c6d1e6;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+form{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:10px;margin-bottom:12px}
+label{font-size:14px;font-weight:500;display:grid;gap:4px}
+input,select,textarea{font:inherit;padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+.item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.item>div:first-child{flex:1}
+.cartbar{position:fixed;inset:auto 12px calc(12px + env(safe-area-inset-bottom)) 12px;max-width:736px;margin:auto;z-index:6}
+.cartbar button{width:100%;background:var(--brass);color:#14284b;padding:13px;font-size:16px;box-shadow:0 4px 14px #0004}
+.sheet{position:fixed;inset:0;background:#000a;z-index:9;display:flex;align-items:flex-end}
+.sheet>div{background:var(--card);width:100%;max-width:760px;margin:auto;border-radius:14px 14px 0 0;padding:16px;max-height:85vh;overflow:auto}
+.qty{display:flex;align-items:center;gap:8px}.qty button{padding:2px 11px}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:20px;z-index:20;font-size:14px}
+.err{color:var(--bad);font-size:14px}.note{background:var(--card);border:1px solid var(--brass);border-right:5px solid var(--brass);border-radius:6px;padding:12px;margin:10px 0;display:grid;gap:8px;font-size:15px}
+.srch{display:flex;gap:8px;margin-bottom:10px}.srch input{flex:1}.gov{margin:10px 0}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:var(--brass);color:#14284b;font-weight:700;margin-top:4px}
+.badge.off{background:var(--bad);color:#fff}.badge.on{background:var(--ok);color:#fff}
+s{color:var(--mute);font-size:13px}.qa{font-size:12px;color:var(--mute);margin-inline-end:8px}
+.low{border:2px solid var(--ok)}
+</style>
+</head>
+<body>
+<header>
+  <a href="#/" class="brand">مول <b>العالم</b></a>
+  <nav id="nav"></nav>
+</header>
+<main id="app"></main>
+<div id="cartbar"></div>
+<div id="sheet"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== ضع رابط مشروعك الحقيقي هنا (Project Settings ← API ← Project URL) ===== */
+const SUPABASE_URL = "https://dhmbxmzmdistdylfniot.supabase.co";
+/* ===== بيانات الاشتراك (غيّرها لبياناتك) ===== */
+const SUB_PRICE = "100";            // سعر الاشتراك الشهري بالجنيه
+const PAY_VODAFONE = "01XXXXXXXXX"; // رقم فودافون كاش بتاعك
+const ADMIN_WA = "20XXXXXXXXXX";    // رقم واتساب الإدارة بالكود الدولي
+const SUPABASE_KEY = "sb_publishable_B7rCK37yxpAg7QplWgZwdg_PofT1HPv";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let user = null, cats = [], curStore = null, filterCat = 0;
+
+function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+const money = n => Number(n).toLocaleString("ar-EG") + " ج";
+
+/* ---- السلة: منفصلة لكل محل ---- */
+const getCart = id => { try { return JSON.parse(localStorage.getItem("cart:"+id)) || {} } catch { return {} } };
+const setCart = (id,c) => { try { localStorage.setItem("cart:"+id, JSON.stringify(c)) } catch {} };
+
+async function init(){
+  const { data:{ session } } = await db.auth.getSession();
+  user = session?.user || null;
+  db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;drawNav()});
+  const r = await db.from("categories").select("*").order("floor_no").order("id");
+  cats = r.data || [];
+  drawNav(); route();
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+function drawNav(){
+  $("#nav").innerHTML = user
+    ? `<a href="#/dashboard">محلي</a><a href="#" id="out">خروج</a>`
+    : `<a href="#/login">تاجر؟ استأجر محل</a>`;
+  const o=$("#out"); if(o) o.onclick=async e=>{e.preventDefault();await db.auth.signOut();location.hash="#/"};
+}
+window.addEventListener("hashchange", route);
+
+function route(){
+  $("#cartbar").innerHTML=""; $("#sheet").innerHTML="";
+  const h = location.hash.replace(/^#\/?/,"").split("/");
+  scrollTo(0,0);
+  if (h[0]==="store" && h[1]) return storePage(decodeURIComponent(h[1]));
+  if (h[0]==="login") return loginPage();
+  if (h[0]==="search") return searchPage(h[1]||"");
+  if (h[0]==="offers") return offersPage();
+  if (h[0]==="requests") return requestsPage();
+  if (h[0]==="dashboard") return dashPage();
+  homePage();
+}
+
+/* ---- أدوات مشتركة ---- */
+const favs=()=>{try{return JSON.parse(localStorage.getItem("fav")||"[]")}catch{return[]}};
+const logoHtml=s=>`<div class="logo">${s.logo_url?`<img src="${esc(s.logo_url)}" alt="">`:esc(s.name[0])}</div>`;
+const isNew=s=>s.created_at&&Date.now()-new Date(s.created_at)<7*864e5;
+const offer=p=>p.old_price&&(!p.offer_ends_at||new Date(p.offer_ends_at)>Date.now());
+const eff=p=>(offer(p)||!p.old_price)?p.price:p.old_price;
+const left=t=>{const h=Math.floor((new Date(t)-Date.now())/36e5);return h>=24?Math.floor(h/24)+" يوم":Math.max(h,0)+" ساعة"};
+const waLink=(s,t)=>`https://wa.me/${String(s.whatsapp).replace(/\D/g,"")}?text=${encodeURIComponent(t)}`;
+function isOpen(s){if(!s.open_from||!s.open_to)return true;const d=new Date(),m=d.getHours()*60+d.getMinutes(),f=t=>{const[a,b]=t.split(":");return +a*60+ +b},a=f(s.open_from),b=f(s.open_to);return a<=b?m>=a&&m<b:m>=a||m<b}
+const shopCard=s=>`<a class="shop" href="#/store/${encodeURIComponent(s.slug)}" style="border-top-color:${esc(s.color||"#d99a1e")}">${logoHtml(s)}<b>${esc(s.name)}${s.is_verified?" ✔":""}</b><br><small>${esc(s.categories?.name||"")}${s.governorate?" - "+esc(s.governorate):""}</small>${isNew(s)?'<br><span class="badge">افتُتح حديثاً</span>':""}</a>`;
+const prodCard=(p,extra="")=>`<div class="prod"><div class="im">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">`:"بدون صورة"}</div>
+  <div class="b"><b>${esc(p.name)}</b><span class="muted">${esc(p.description||"")}</span>
+  <span class="price">${money(eff(p))}${offer(p)?` <s>${money(p.old_price)}</s>`:""}</span>
+  ${offer(p)&&p.offer_ends_at?`<span class="badge off">العرض ينتهي بعد ${left(p.offer_ends_at)}</span>`:""}${extra}</div></div>`;
+
+/* ---- المدخل ---- */
+async function homePage(){
+  $("#app").innerHTML=`<div id="season"></div>
+  <form id="sf" class="srch"><input id="q" placeholder="دوّر على منتج في كل المحلات" required><button>بحث</button></form>
+  <div class="row"><a class="btn" href="#/offers">عروض المول</a><a class="btn" href="#/requests">سبورة الطلبات</a><button class="alt" id="rnd">دوّرني في المول</button></div>
+  <div id="sod"></div><div id="trend"></div><h2>أدوار المول</h2><div class="chips" id="chips"></div>
+  <select id="gov" class="gov"><option value="">كل المحافظات</option></select>
+  <div class="grid" id="shops"><p class="muted">جاري التحميل…</p></div>`;
+  $("#sf").onsubmit=e=>{e.preventDefault();location.hash="#/search/"+encodeURIComponent($("#q").value.trim())};
+  const [st,tr,sh]=await Promise.all([db.from("settings").select("*"),db.rpc("trending_stores"),
+    db.from("stores").select("slug,name,logo_url,color,is_verified,governorate,created_at,category_id,categories(name)").order("created_at",{ascending:false}).limit(300)]);
+  if(sh.error) return $("#shops").innerHTML=`<p class="err">تعذر تحميل المحلات: ${esc(sh.error.message)}</p>`;
+  const all=sh.data, set=Object.fromEntries((st.data||[]).map(r=>[r.key,r.value]));
+  if(set.season) $("#season").innerHTML=`<div class="note"><b>${esc(set.season)}</b></div>`;
+  const sod=all.find(x=>x.slug===set.store_of_day);
+  if(sod) $("#sod").innerHTML=`<h2>محل اليوم</h2><div class="grid">${shopCard(sod)}</div>`;
+  if(tr.data?.length) $("#trend").innerHTML=`<h2>الأكثر زيارة اليوم</h2><div class="grid">${tr.data.map(shopCard).join("")}</div>`;
+  $("#rnd").onclick=()=>{if(all.length)location.hash="#/store/"+encodeURIComponent(all[Math.floor(Math.random()*all.length)].slug)};
+  $("#gov").innerHTML+=[...new Set(all.map(x=>x.governorate).filter(Boolean))].map(g=>`<option>${esc(g)}</option>`).join("");
+  const draw=()=>{const g=$("#gov").value,l=all.filter(x=>(!filterCat||x.category_id===filterCat)&&(!g||x.governorate===g));
+    $("#shops").innerHTML=l.length?l.map(shopCard).join(""):`<p class="muted">لا توجد محلات هنا بعد.</p>`};
+  $("#chips").innerHTML=[{id:0,name:"كل المحلات"},...cats].map(c=>`<button class="chip ${c.id===filterCat?"on":""}" data-c="${c.id}">${esc((c.icon||"")+" "+c.name)}</button>`).join("");
+  $("#chips").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;filterCat=+b.dataset.c;document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on",x===b));draw()};
+  $("#gov").onchange=draw; draw();
+}
+
+/* ---- البحث وأرخص سعر ---- */
+async function searchPage(q){
+  q=decodeURIComponent(q);
+  $("#app").innerHTML=`<h2>نتائج "${esc(q)}" في كل المحلات</h2><div id="res"><p class="muted">جاري البحث…</p></div>`;
+  const {data,error}=await db.from("products").select("*,stores!inner(slug,name)").ilike("name","%"+q+"%").eq("available",true).limit(80);
+  if(error) return $("#res").innerHTML=`<p class="err">تعذر البحث.</p>`;
+  const l=(data||[]).sort((a,b)=>eff(a)-eff(b));
+  $("#res").innerHTML=l.length?`<p class="muted">مرتبة من الأرخص للأغلى</p><div class="grid">${l.map((p,i)=>prodCard(p,`<a href="#/store/${encodeURIComponent(p.stores.slug)}">من محل ${esc(p.stores.name)}</a>${i===0?'<span class="badge on">الأرخص</span>':""}`).replace('class="prod"',i===0?'class="prod low"':'class="prod"')).join("")}</div>`:`<p class="muted">مفيش نتائج. جرّب <a href="#/requests">سبورة الطلبات</a> واكتب اللي عايزه ويرد عليك التجار.</p>`;
+}
+
+/* ---- عروض المول ---- */
+async function offersPage(){
+  $("#app").innerHTML=`<h2>عروض المول</h2><div class="grid" id="res"><p class="muted">جاري التحميل…</p></div>`;
+  const {data}=await db.from("products").select("*,stores!inner(slug,name)").not("old_price","is",null).eq("available",true).limit(100);
+  const l=(data||[]).filter(offer).sort((a,b)=>(b.old_price-b.price)/b.old_price-(a.old_price-a.price)/a.old_price);
+  $("#res").innerHTML=l.length?l.map(p=>prodCard(p,`<span class="badge off">خصم ${Math.round((1-p.price/p.old_price)*100)}%</span><a href="#/store/${encodeURIComponent(p.stores.slug)}">محل ${esc(p.stores.name)}</a>`)).join(""):`<p class="muted">مفيش عروض دلوقتي.</p>`;
+}
+
+/* ---- سبورة الطلبات ---- */
+async function requestsPage(){
+  $("#app").innerHTML=`<h2>سبورة الطلبات</h2><p class="muted">اكتب اللي بتدور عليه، والتجار اللي عندهم بيردوا عليك على واتساب.</p>
+  <form id="rf"><label>عايز إيه؟<textarea id="rb" required minlength="5" maxlength="300" rows="3" placeholder="مثال: فلتر زيت لسيارة كيا سيراتو 2015"></textarea></label>
+  <label>القسم<select id="rc">${cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></label>
+  <label>المحافظة<input id="rg"></label><label>رقم واتساب للرد عليك<input id="rw" required inputmode="numeric" placeholder="201012345678"></label>
+  <p class="err" id="er"></p><button>انشر الطلب</button></form><h2>طلبات الزبائن</h2><div id="list"></div>`;
+  $("#rf").onsubmit=async e=>{e.preventDefault();
+    const r=await db.from("requests").insert({body:$("#rb").value.trim(),category_id:+$("#rc").value,governorate:$("#rg").value.trim()||null,whatsapp:$("#rw").value.replace(/\D/g,"")});
+    if(r.error)return $("#er").textContent="تعذر النشر: "+r.error.message; toast("تم نشر طلبك"); requestsPage()};
+  if(!user) return $("#list").innerHTML=`<p class="muted">الطلبات بتظهر للتجار المسجلين بس. <a href="#/login">ادخل كتاجر</a> علشان تشوفها وتبيع.</p>`;
+  const {data}=await db.from("requests").select("*,categories(name)").order("created_at",{ascending:false}).limit(60);
+  $("#list").innerHTML=(data||[]).map(r=>`<div class="item"><div><b>${esc(r.body)}</b><br><small class="muted">${esc(r.categories?.name||"")} ${r.governorate?"- "+esc(r.governorate):""}</small></div>
+    <a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${esc(r.whatsapp)}?text=${encodeURIComponent("عندي اللي طلبته في مول العالم: "+r.body)}">رد</a></div>`).join("")||`<p class="muted">لا توجد طلبات.</p>`;
+}
+
+/* ---- صفحة المحل ---- */
+async function storePage(slug){
+  $("#app").innerHTML=`<p class="muted">جاري فتح المحل…</p>`;
+  const {data:s}=await db.from("stores").select("*,categories(name)").eq("slug",slug).maybeSingle();
+  if(!s) return $("#app").innerHTML=`<h2>المحل غير موجود أو مقفول</h2><a class="btn" href="#/">رجوع للمول</a>`;
+  curStore=s; coupon=null;
+  try{ if(!sessionStorage.getItem("v:"+s.id)){sessionStorage.setItem("v:"+s.id,1);db.from("store_events").insert({store_id:s.id,kind:"view"}).then(()=>{})} }catch{}
+  const [pr,rv]=await Promise.all([db.from("products").select("*").eq("store_id",s.id).eq("available",true).order("created_at",{ascending:false}),
+    db.from("reviews").select("*").eq("store_id",s.id).order("created_at",{ascending:false}).limit(20)]);
+  const ps=pr.data||[], rs=rv.data||[], open=isOpen(s), faved=favs().includes(s.slug);
+  const avg=rs.length?(rs.reduce((a,r)=>a+r.rating,0)/rs.length).toFixed(1):null;
+  const bg=`background:${esc(s.color||"#14284b")}${s.cover_url?`;background-image:linear-gradient(#0005,#0009),url('${esc(s.cover_url)}');background-size:cover`:""}`;
+  $("#app").innerHTML=`<div class="hero" style="${bg}">${logoHtml(s)}<div><h2 style="margin:0">${esc(s.name)}${s.is_verified?" ✔":""}</h2>
+    <p>${esc(s.categories?.name||"")}${s.governorate?" - "+esc(s.governorate):""}${s.delivers?" - يوصّل":""}${avg?` - ★ ${avg} (${rs.length})`:""}</p>
+    <span class="badge ${open?"on":"off"}">${open?"مفتوح الآن":"مقفول الآن"+(s.open_from?" - يفتح "+s.open_from.slice(0,5):"")}</span>
+    ${s.description?`<p>${esc(s.description)}</p>`:""}
+    <div class="row"><button class="alt" style="color:#fff;border-color:#fff8" data-act="share">شارك الرابط</button>
+    <button class="alt" style="color:#fff;border-color:#fff8" data-act="fav">${faved?"★ في المفضلة":"☆ أضف للمفضلة"}</button>
+    <a class="btn" href="#/" style="background:#ffffff33">خروج للمول</a></div></div></div>
+    <div class="grid" id="prods">${ps.length?ps.map(p=>prodCard(p,`<button data-add="${p.id}">أضف للسلة</button>
+      <span><a class="qa" data-wa target="_blank" rel="noopener" href="${waLink(s,"هل "+p.name+" متوفر؟")}">متوفر؟</a><a class="qa" data-wa target="_blank" rel="noopener" href="${waLink(s,"التوصيل لمنطقتي بكام؟ بخصوص "+p.name)}">التوصيل؟</a></span>`)).join(""):`<p class="muted">المحل لم يضف منتجات بعد.</p>`}</div>
+    <h2 style="margin-top:24px">تقييمات الزبائن</h2>
+    <form id="rvf"><label>تقييمك<select id="rr"><option value="5">★★★★★</option><option value="4">★★★★</option><option value="3">★★★</option><option value="2">★★</option><option value="1">★</option></select></label>
+    <label>اسمك<input id="ra" maxlength="40"></label><label>رأيك<input id="rm" maxlength="300"></label><button>أرسل التقييم</button></form>
+    ${rs.map(r=>`<div class="item"><div><b>${"★".repeat(r.rating)}</b> ${esc(r.author||"زبون")}<br><span class="muted">${esc(r.comment||"")}</span></div></div>`).join("")}
+    <h2 style="margin-top:24px">كمّل جولتك في المول</h2><div class="grid" id="others"></div>
+    <div class="row" style="margin:16px 0 70px"><a class="btn" href="#/">كل المحلات والأقسام</a><button class="alt" data-act="report">إبلاغ عن المحل</button></div>`;
+  db.from("stores").select("slug,name,logo_url,color,is_verified,governorate,created_at,categories(name)").neq("id",s.id).order("created_at",{ascending:false}).limit(8)
+    .then(({data})=>{$("#others").innerHTML=(data||[]).map(shopCard).join("")||`<p class="muted">لا توجد محلات أخرى بعد.</p>`});
+  const pm=Object.fromEntries(ps.map(p=>[p.id,p]));
+  $("#app").onclick=async e=>{
+    const t=e.target.closest("[data-add],[data-act],[data-wa]"); if(!t)return;
+    if(t.dataset.wa!==undefined){db.from("store_events").insert({store_id:s.id,kind:"whatsapp"}).then(()=>{});return}
+    if(t.dataset.add){const c=getCart(s.id),p=pm[t.dataset.add];c[p.id]={n:p.name,p:eff(p),q:(c[p.id]?.q||0)+1};setCart(s.id,c);toast("أُضيف للسلة");return drawCartBar()}
+    const a=t.dataset.act;
+    if(a==="share"){try{if(navigator.share)await navigator.share({title:s.name,url:location.href});else{await navigator.clipboard.writeText(location.href);toast("تم نسخ الرابط")}}catch{}}
+    if(a==="fav"){let f=favs();f=f.includes(s.slug)?f.filter(x=>x!==s.slug):[...f,s.slug];try{localStorage.setItem("fav",JSON.stringify(f))}catch{};t.textContent=f.includes(s.slug)?"★ في المفضلة":"☆ أضف للمفضلة"}
+    if(a==="report"){const r=prompt("سبب البلاغ؟");if(r&&r.trim()){const x=await db.from("reports").insert({store_id:s.id,reason:r.trim().slice(0,300)});toast(x.error?"تعذر الإرسال":"وصلنا بلاغك، شكراً")}}
+  };
+  $("#rvf").onsubmit=async e=>{e.preventDefault();
+    const x=await db.from("reviews").insert({store_id:s.id,rating:+$("#rr").value,author:$("#ra").value.trim()||null,comment:$("#rm").value.trim()||null});
+    if(x.error)return toast("تعذر الإرسال"); toast("شكراً لتقييمك"); storePage(slug)};
+  drawCartBar();
+}
+let coupon=null;
+function drawCartBar(){
+  const c=getCart(curStore.id),n=Object.values(c).reduce((a,i)=>a+i.q,0);
+  $("#cartbar").innerHTML=n?`<div class="cartbar"><button id="openCart">سلة ${esc(curStore.name)} (${n}) - عرض وإرسال الطلب</button></div>`:"";
+  const b=$("#openCart"); if(b)b.onclick=openCart;
+}
+function openCart(){
+  const s=curStore,c=getCart(s.id),ids=Object.keys(c);
+  const sub=ids.reduce((a,i)=>a+c[i].p*c[i].q,0), total=Math.round(sub*(1-(coupon?.percent||0)/100));
+  const msg=`مرحباً ${s.name}، عايز أطلب من مول العالم:\n`+ids.map(i=>`• ${c[i].n} × ${c[i].q} = ${c[i].p*c[i].q} ج`).join("\n")+(coupon?`\nكوبون ${coupon.code}: خصم ${coupon.percent}%`:"")+`\nالإجمالي: ${total} ج`;
+  $("#sheet").innerHTML=`<div class="sheet"><div><h2 style="margin-top:0">سلتك في ${esc(s.name)}</h2>
+    ${ids.map(i=>`<div class="item"><div>${esc(c[i].n)}<br><small class="muted">${money(c[i].p)}</small></div>
+      <div class="qty"><button class="alt" data-m="${i}">−</button><b>${c[i].q}</b><button class="alt" data-p="${i}">+</button></div></div>`).join("")}
+    <div class="row"><input id="cc" placeholder="كوبون خصم؟" style="flex:1"><button class="alt" id="ca">تطبيق</button></div>
+    <h2>الإجمالي: ${money(total)}</h2>
+    <div class="row"><a class="btn wa" id="wab" target="_blank" rel="noopener" href="${waLink(s,msg)}">اطلب على واتساب التاجر</a><button class="alt" id="close">متابعة التسوق</button></div></div></div>`;
+  $("#close").onclick=()=>{$("#sheet").innerHTML="";drawCartBar()};
+  $("#wab").onclick=()=>{db.from("store_events").insert({store_id:s.id,kind:"whatsapp"}).then(()=>{})};
+  $("#ca").onclick=async()=>{const code=$("#cc").value.trim();if(!code)return;
+    const {data}=await db.from("coupons").select("code,percent").eq("store_id",s.id).ilike("code",code).maybeSingle();
+    if(!data)return toast("كوبون غير صحيح"); coupon=data; toast("تم تطبيق الخصم"); openCart()};
+  $("#sheet").onclick=e=>{const m=e.target.dataset.m,p=e.target.dataset.p;if(!m&&!p)return;
+    const k=m||p;c[k].q+=p?1:-1;if(c[k].q<=0)delete c[k];setCart(s.id,c);
+    Object.keys(c).length?openCart():($("#sheet").innerHTML="",drawCartBar())};
+}
+
+/* ---- دخول التاجر ---- */
+function loginPage(){
+  if (user) { location.hash="#/dashboard"; return; }
+  $("#app").innerHTML = `<h2>ادخل أو افتح حساب تاجر</h2>
+    <form id="f"><label>الإيميل<input type="email" id="em" required autocomplete="email"></label>
+    <label>كلمة المرور (6 أحرف على الأقل)<input type="password" id="pw" required minlength="6" autocomplete="current-password"></label>
+    <p class="err" id="er"></p>
+    <div class="row"><button type="submit">دخول</button><button type="button" class="alt" id="su">حساب جديد</button></div></form>`;
+  const go = async mode => {
+    const cred={email:$("#em").value.trim(),password:$("#pw").value};
+    const r = mode==="up" ? await db.auth.signUp(cred) : await db.auth.signInWithPassword(cred);
+    if (r.error) return $("#er").textContent = "تعذر الدخول: " + r.error.message;
+    if (mode==="up" && !r.data.session) return $("#er").textContent = "تم إنشاء الحساب. أكد الإيميل من الرسالة ثم ادخل.";
+    location.hash="#/dashboard";
+  };
+  $("#f").onsubmit=e=>{e.preventDefault();go("in")}; $("#su").onclick=()=>go("up");
+}
+
+/* ---- لوحة التاجر ---- */
+async function dashPage(){
+  if (!user) { location.hash="#/login"; return; }
+  const { data:s } = await db.from("stores").select("*").eq("owner_id",user.id).maybeSingle();
+  if (!s) return newStoreForm();
+  const link = location.origin + location.pathname + "#/store/" + encodeURIComponent(s.slug);
+  const { data:ps } = await db.from("products").select("*").eq("store_id",s.id).order("created_at",{ascending:false});
+  const now=Date.now(), paid=!!s.paid_until&&new Date(s.paid_until)>now, trialOn=new Date(s.trial_ends_at)>now, active=paid||trialOn;
+  const endD=paid?new Date(s.paid_until):new Date(s.trial_ends_at), daysLeft=Math.max(0,Math.ceil((endD-now)/864e5)), endTxt=endD.toLocaleDateString("ar-EG");
+  const full=!paid&&(ps||[]).length>=3, canAdd=active&&!full;
+  const payMsg=encodeURIComponent("مرحباً، أنا صاحب محل "+s.name+" (رابط: "+s.slug+") وعايز أشترك في مول العالم");
+  let banner;
+  if(paid) banner=`<div class="note">اشتراكك فعّال لحد ${endTxt} (باقي ${daysLeft} يوم). عدد منتجات بلا حد.</div>`;
+  else if(!trialOn) banner=`<div class="note"><b class="err">انتهت التجربة المجانية ومحلك مخفي عن الزبائن.</b>اشترك علشان يرجع يظهر.${payBox()}</div>`;
+  else banner=`<div class="note"><b>تجربة مجانية: باقي ${daysLeft} يوم (تنتهي ${endTxt})</b><span>منتجاتك ${(ps||[]).length} من 3 في فترة التجربة.</span>${daysLeft<=7?(s.renew_intent==="no"?`<span>سجلنا إنك مش هتشترك، ومحلك هيتخفى يوم ${endTxt}. لو غيرت رأيك:</span><button id="subyes">هشترك</button>`:s.renew_intent==="yes"?payBox():`<b>التجربة قربت تخلص، هتشترك؟</b><div class="row"><button id="subyes">أيوه هشترك</button><button class="alt" id="subno">لا</button></div>`):""}</div>`;
+  function payBox(){return `<span>الاشتراك ${SUB_PRICE} ج/شهر، وبعده تضيف منتجات بلا حد. ادفع بإحدى الطرق:</span><span>• فودافون كاش على الرقم <b>${PAY_VODAFONE}</b></span><span>• أو مندوب يجيلك لحد المحل</span><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${ADMIN_WA}?text=${payMsg}">ابعت لنا على واتساب بعد التحويل</a><small class="muted">محلك بيتفعل بعد تأكيد الدفع.</small>`}
+  $("#app").innerHTML = `<h2>محل ${esc(s.name)}</h2>${banner}
+    <p class="muted">رابط محلك: <span style="word-break:break-all">${esc(link)}</span></p>
+    <div class="row"><button id="cp">انسخ الرابط</button><a class="btn alt" style="border:1px solid var(--line);color:var(--ink);background:transparent" href="#/store/${encodeURIComponent(s.slug)}">شاهد محلك</a>
+    <a class="btn alt" style="border:1px solid var(--line);color:var(--ink);background:transparent" href="#/">تفرج على باقي المول</a></div>
+    <h2>أضف منتج</h2>${canAdd?"":`<p class="err">${active?"وصلت للحد الأقصى (3 منتجات) في التجربة المجانية. اشترك لإضافة المزيد.":"محلك متوقف. اشترك لإضافة منتجات."}</p>`}
+    <form id="pf" ${canAdd?"":"hidden"}><label>اسم المنتج<input id="pn" required></label>
+    <label>السعر (جنيه)<input id="pp" type="number" min="0" step="any" required inputmode="decimal"></label>
+    <label>رابط صورة المنتج (اختياري)<input id="pi" type="url" placeholder="https://"></label>
+    <label>وصف قصير<input id="pd"></label><p class="err" id="er"></p><button>حفظ المنتج</button></form>
+    <h2>منتجاتك (${(ps||[]).length})</h2><div id="list"></div>`;
+  $("#cp").onclick=async()=>{try{await navigator.clipboard.writeText(link);toast("تم نسخ الرابط")}catch{toast("انسخه يدوياً")}};
+  const setIntent=async v=>{const r=await db.from("stores").update({renew_intent:v}).eq("id",s.id);if(r.error)return toast("تعذر الحفظ");dashPage()};
+  if($("#subyes"))$("#subyes").onclick=()=>setIntent("yes"); if($("#subno"))$("#subno").onclick=()=>setIntent("no");
+  $("#list").innerHTML = (ps||[]).map(p=>`<div class="item"><div><b>${esc(p.name)}</b><br><span class="price">${money(p.price)}</span>${p.available?"":' <small class="err">مخفي</small>'}</div>
+    <button class="alt" data-t="${p.id}" data-a="${p.available}">${p.available?"إخفاء":"إظهار"}</button><button class="del" data-d="${p.id}">حذف</button></div>`).join("") || `<p class="muted">لم تضف منتجات بعد. ابدأ بالنموذج بالأعلى.</p>`;
+  $("#pf").onsubmit=async e=>{e.preventDefault();
+    const r=await db.from("products").insert({store_id:s.id,name:$("#pn").value.trim(),price:+$("#pp").value,image_url:$("#pi").value.trim()||null,description:$("#pd").value.trim()||null});
+    if(r.error) return $("#er").textContent="تعذر الحفظ: "+r.error.message; toast("تم حفظ المنتج"); dashPage(); };
+  $("#list").onclick=async e=>{ const t=e.target;
+    if(t.dataset.d && confirm("حذف المنتج؟")){await db.from("products").delete().eq("id",t.dataset.d);dashPage()}
+    if(t.dataset.t){await db.from("products").update({available:t.dataset.a!=="true"}).eq("id",t.dataset.t);dashPage()} };
+}
+function newStoreForm(){
+  $("#app").innerHTML = `<h2>استأجر محلك في المول</h2>
+    <form id="sf"><label>اسم المحل<input id="sn" required></label>
+    <label>رابط المحل (حروف إنجليزية وأرقام و - فقط)<input id="ss" required pattern="[a-z0-9\\-]+" placeholder="my-shop"></label>
+    <label>القسم<select id="sc">${cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></label>
+    <label>رقم واتساب (بالكود الدولي، مثال 201012345678)<input id="sw" required inputmode="numeric"></label>
+    <label>رابط شعار المحل (اختياري)<input id="sl" type="url"></label>
+    <label>وصف قصير<input id="sd"></label><p class="err" id="er"></p><button>افتح المحل</button></form>`;
+  $("#sf").onsubmit=async e=>{e.preventDefault();
+    const r=await db.from("stores").insert({name:$("#sn").value.trim(),slug:$("#ss").value.trim(),category_id:+$("#sc").value,whatsapp:$("#sw").value.replace(/\D/g,""),logo_url:$("#sl").value.trim()||null,description:$("#sd").value.trim()||null});
+    if(r.error) return $("#er").textContent = r.error.code==="23505" ? "رابط المحل مستخدم، اختر غيره." : "تعذر الفتح: "+r.error.message;
+    toast("تم فتح محلك"); dashPage(); };
+}
+init();
+</script>
+</body>
+</html>
